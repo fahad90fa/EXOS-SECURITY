@@ -1,0 +1,29 @@
+[package]
+name        = "nexus-fuzzer"
+description = "Quantum Fuzzer — adaptive parameter fuzzing engine"
+version.workspace     = true
+edition.workspace     = true
+authors.workspace     = true
+license.workspace     = true
+
+[lib]
+name = "nexus_fuzzer"
+path = "src/lib.rs"
+
+[dependencies]
+nexus-core    = { path = "../core" }
+nexus-scanner = { path = "../scanner" }
+
+tokio.workspace       = true
+futures.workspace     = true
+reqwest.workspace     = true
+serde.workspace       = true
+serde_json.workspace  = true
+anyhow.workspace      = true
+tracing.workspace     = true
+uuid.workspace        = true
+chrono.workspace      = true
+rand.workspace        = true
+regex.workspace       = true
+async-trait.workspace = true
+dashmap.workspace     = true

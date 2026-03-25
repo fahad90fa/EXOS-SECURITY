@@ -1,0 +1,36 @@
+[package]
+name        = "nexus-crawler"
+description = "DeepCrawl AI — intelligent web crawler for attack surface discovery"
+version.workspace     = true
+edition.workspace     = true
+authors.workspace     = true
+license.workspace     = true
+
+[lib]
+name = "nexus_crawler"
+path = "src/lib.rs"
+
+[dependencies]
+nexus-core    = { path = "../core" }
+nexus-scanner = { path = "../scanner" }
+
+tokio.workspace       = true
+futures.workspace     = true
+reqwest.workspace     = true
+bytes.workspace       = true
+url.workspace         = true
+
+serde.workspace       = true
+serde_json.workspace  = true
+
+anyhow.workspace      = true
+thiserror.workspace   = true
+tracing.workspace     = true
+
+uuid.workspace        = true
+chrono.workspace      = true
+regex.workspace       = true
+scraper.workspace     = true
+async-trait.workspace = true
+dashmap.workspace     = true
+parking_lot.workspace = true

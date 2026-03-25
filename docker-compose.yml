@@ -1,0 +1,152 @@
+version: '3.8'
+
+services:
+  # ─── Core Services ───────────────────────────────────────────────────────
+
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: nexusdb
+      POSTGRES_USER: nexus
+      POSTGRES_PASSWORD: nexus123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nexus -d nexusdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # ─── Application Services ────────────────────────────────────────────────
+
+  nexus-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    environment:
+      DATABASE_URL: postgresql://nexus:nexus123@postgres:5432/nexusdb
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: your-super-secret-jwt-key-change-in-production
+      RUST_LOG: nexus_api=info,tower_http=info
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  nexus-proxy:
+    build:
+      context: .
+      dockerfile: Dockerfile.proxy
+    environment:
+      RUST_LOG: nexus_proxy=info
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./certs:/app/certs
+
+  # ─── AI/ML Services ──────────────────────────────────────────────────────
+
+  exploitgpt:
+    build:
+      context: .
+      dockerfile: Dockerfile.ai
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      MODEL_CACHE_DIR: /app/models
+    volumes:
+      - ai_models:/app/models
+    ports:
+      - "8001:8001"
+    depends_on:
+      - nexus-api
+
+  # ─── OAST Services ───────────────────────────────────────────────────────
+
+  oast-dns:
+    build:
+      context: .
+      dockerfile: Dockerfile.oast
+    ports:
+      - "5353:5353/udp"
+    environment:
+      RUST_LOG: oast_dns=info
+
+  oast-http:
+    build:
+      context: .
+      dockerfile: Dockerfile.oast
+    command: ["http"]
+    ports:
+      - "4444:4444"
+    environment:
+      RUST_LOG: oast_http=info
+
+  # ─── Monitoring & Observability ──────────────────────────────────────────
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+
+  # ─── Reverse Proxy ───────────────────────────────────────────────────────
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/ssl/certs
+    depends_on:
+      - nexus-api
+      - nexus-proxy
+
+volumes:
+  postgres_data:
+  redis_data:
+  ai_models:
+  prometheus_data:
+  grafana_data:
