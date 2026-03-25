@@ -91,6 +91,63 @@ enum Commands {
         #[arg(short, long, default_value = "10")]
         threads: usize,
     },
+
+    /// Analyze a smart contract or Web3 frontend
+    Blockchain {
+        #[command(subcommand)]
+        command: BlockchainCommands,
+    },
+
+    /// Build a red-team plan or report from findings
+    Redteam {
+        #[command(subcommand)]
+        command: RedteamCommands,
+    },
+
+    /// Analyze a mobile application package
+    Mobile {
+        /// Mobile subcommand
+        #[command(subcommand)]
+        command: MobileCommands,
+    },
+}
+
+#[derive(Subcommand)]
+enum MobileCommands {
+    /// Run static APK analysis
+    Analyze {
+        /// APK path
+        apk: String,
+    },
+
+    /// Print a mobile scan report as JSON
+    Report {
+        /// APK path
+        apk: String,
+    },
+}
+
+#[derive(Subcommand)]
+enum BlockchainCommands {
+    /// Analyze a Solidity source file
+    Analyze {
+        /// Contract path
+        contract: String,
+    },
+    /// Analyze a JavaScript/Web3 frontend bundle
+    Web3 {
+        /// JavaScript bundle path
+        bundle: String,
+    },
+}
+
+#[derive(Subcommand)]
+enum RedteamCommands {
+    /// Build a planning report from a JSON finding list
+    Plan {
+        /// JSON file containing findings
+        findings: String,
+    },
 }
 
 #[tokio::main]
@@ -113,6 +170,27 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Commands::Fuzz { url, param, wordlist, threads } => {
             commands::fuzz::run(url, param, wordlist, threads).await?;
         }
+        Commands::Blockchain { command } => match command {
+            BlockchainCommands::Analyze { contract } => {
+                commands::blockchain::analyze(contract).await?;
+            }
+            BlockchainCommands::Web3 { bundle } => {
+                commands::blockchain::web3(bundle).await?;
+            }
+        },
+        Commands::Redteam { command } => match command {
+            RedteamCommands::Plan { findings } => {
+                commands::redteam::plan(findings).await?;
+            }
+        },
+        Commands::Mobile { command } => match command {
+            MobileCommands::Analyze { apk } => {
+                commands::mobile::analyze(apk).await?;
+            }
+            MobileCommands::Report { apk } => {
+                commands::mobile::report(apk).await?;
+            }
+        },
     }
 
     Ok(())

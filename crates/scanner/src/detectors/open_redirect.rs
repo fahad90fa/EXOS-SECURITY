@@ -58,7 +58,7 @@ impl Detector for OpenRedirectDetector {
                                 Severity::Medium,
                                 &ctx.url,
                                 &param.name,
-                                payload,
+                                *payload,
                                 format!("Server redirected to external domain: {}", redirected),
                                 "open_redirect",
                             )

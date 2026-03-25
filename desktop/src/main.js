@@ -9,6 +9,7 @@ import Dashboard from './components/Dashboard.vue'
 import Proxy from './components/Proxy.vue'
 import Scanner from './components/Scanner.vue'
 import Crawler from './components/Crawler.vue'
+import MobileHome from './components/Mobile/MobileHome.vue'
 import Reports from './components/Reports.vue'
 import Settings from './components/Settings.vue'
 
@@ -17,6 +18,7 @@ const routes = [
   { path: '/proxy', component: Proxy },
   { path: '/scanner', component: Scanner },
   { path: '/crawler', component: Crawler },
+  { path: '/mobile', component: MobileHome },
   { path: '/reports', component: Reports },
   { path: '/settings', component: Settings }
 ]

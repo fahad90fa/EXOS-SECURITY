@@ -61,6 +61,7 @@ export default {
       { path: '/proxy', name: 'Proxy' },
       { path: '/scanner', name: 'Scanner' },
       { path: '/crawler', name: 'Crawler' },
+      { path: '/mobile', name: 'Mobile' },
       { path: '/reports', name: 'Reports' },
       { path: '/settings', name: 'Settings' }
     ]

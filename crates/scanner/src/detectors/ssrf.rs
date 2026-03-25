@@ -69,7 +69,7 @@ impl Detector for SsrfDetector {
                                 Severity::Critical,
                                 &ctx.url,
                                 &param.name,
-                                target,
+                                *target,
                                 format!("Potential SSRF — server fetched {} (HTTP {})", target, resp.status),
                                 "ssrf/cloud-metadata",
                             )
@@ -100,7 +100,7 @@ impl Detector for SsrfDetector {
                             Severity::High,
                             &ctx.url,
                             &param.name,
-                            &oast_url,
+                            oast_url.as_str(),
                             format!("OAST SSRF probe sent — check {} for callback", oast),
                             "ssrf/oast",
                         )

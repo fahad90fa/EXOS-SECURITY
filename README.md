@@ -105,7 +105,7 @@ docker-compose up -d
   - Automatic correlation with vulnerabilities
 
 - **✅ ExploitGPT Core** - AI-powered exploitation
-  - GPT-4 integration for exploit generation
+  - NVIDIA Integrate chat-completions integration for exploit generation
   - BERT-based vulnerability classification
   - Payload optimization with PPO RL agent
   - Automated exploit creation and verification
@@ -576,7 +576,7 @@ For commercial use or to remove AGPL restrictions, contact our sales team at [sa
 - **OWASP** for security research and guidelines
 - **Rust Community** for the amazing ecosystem
 - **Tauri Team** for the desktop app framework
-- **OpenAI** for GPT-4 integration
+- **NVIDIA** for Integrate API access
 - **All Contributors** who helped build this project
 
 ---

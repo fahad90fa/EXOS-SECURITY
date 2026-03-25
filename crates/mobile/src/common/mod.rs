@@ -66,8 +66,9 @@ pub struct ApkAnalysisReport {
 impl ApkAnalysisReport {
     pub fn risk_score(&self) -> u32 {
         let mut score = 0;
-        for f in &self.findings {
-            score += match f.severity {
+
+        for finding in &self.findings {
+            score += match finding.severity {
                 AnalysisSeverity::Info => 1,
                 AnalysisSeverity::Low => 3,
                 AnalysisSeverity::Medium => 8,

@@ -1,7 +1,6 @@
 use nexus_scanner::{ScanEngine, ScanEvent};
-use nexus_core::{ScanConfig, ScanType};
+use nexus_core::models::{ScanConfig, ScanType};
 use anyhow::Result;
-use std::str::FromStr;
 use tokio::sync::mpsc;
 use uuid::Uuid;
 

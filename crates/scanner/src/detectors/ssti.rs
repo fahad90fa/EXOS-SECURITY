@@ -49,7 +49,7 @@ impl Detector for SstiDetector {
                                 Severity::Critical,
                                 &ctx.url,
                                 &param.name,
-                                payload,
+                                *payload,
                                 format!("Template expression `{}` evaluated to `{}`", payload, expected),
                                 "ssti/expression",
                             )

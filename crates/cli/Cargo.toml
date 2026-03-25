@@ -17,6 +17,9 @@ nexus-scanner = { path = "../scanner" }
 nexus-crawler = { path = "../crawler" }
 nexus-fuzzer  = { path = "../fuzzer" }
 nexus-api     = { path = "../api" }
+nexus-mobile  = { path = "../mobile" }
+nexus-blockchain = { path = "../blockchain" }
+nexus-redteam    = { path = "../redteam" }
 
 tokio.workspace       = true
 clap.workspace        = true
@@ -26,11 +29,11 @@ tracing.workspace     = true
 tracing-subscriber.workspace = true
 serde.workspace       = true
 serde_json.workspace  = true
+uuid.workspace        = true
 console.workspace     = true
 indicatif.workspace   = true
 dialoguer.workspace   = true
 colored.workspace     = true
-tabled.workspace      = true
 
 # Additional CLI dependencies
 crossterm     = "0.27"

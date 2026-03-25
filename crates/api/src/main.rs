@@ -18,7 +18,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .init();
 
     // Load configuration
-    let config = AppConfig::load()?;
+    let _config = AppConfig::load()?;
 
     // Build the application router
     let app = Router::new()

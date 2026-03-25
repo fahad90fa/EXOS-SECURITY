@@ -58,7 +58,7 @@ impl Detector for CorsDetector {
                             Severity::Critical,
                             &ctx.url,
                             "Origin",
-                            origin,
+                            *origin,
                             format!("ACAO mirrors attacker origin ({}) AND ACAC=true — allows credentialed XS reads", origin),
                             "cors/mirror-with-credentials",
                         )
@@ -72,7 +72,7 @@ impl Detector for CorsDetector {
                             Severity::Medium,
                             &ctx.url,
                             "Origin",
-                            origin,
+                            *origin,
                             format!("ACAO mirrors attacker origin ({}) without credentials flag", origin),
                             "cors/mirror",
                         )

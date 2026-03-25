@@ -38,7 +38,7 @@ impl ParsedApk {
         let url_re = Regex::new(r#"https?://[[:alnum:][:punct:]]+"#)?;
         let api_re = Regex::new(r#"/[a-zA-Z0-9_./-]*(api|graphql|v1|v2)[a-zA-Z0-9_./-]*"#)?;
         let secret_re = Regex::new(
-            r#"(?i)(api[_-]?key|secret|token|password)\s*[:=]\s*['\"][^'\"]{8,}['\"]"#,
+            r#"(?i)(api[_-]?key|secret|token|password)\s*[:=]\s*(?:['\"][^'\"]{8,}['\"]|[^\s<>{}]{8,})"#,
         )?;
 
         for i in 0..archive.len() {
@@ -103,5 +103,46 @@ fn try_decode_manifest_with_apktool(path: &Path) -> Result<String> {
         }
         Ok(exit) => anyhow::bail!("apktool failed with status: {}", exit),
         Err(err) => anyhow::bail!("apktool unavailable: {}", err),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::ParsedApk;
+    use std::{
+        fs::File,
+        io::Write,
+    };
+    use tempfile::tempdir;
+    use zip::{write::FileOptions, ZipWriter};
+
+    #[test]
+    fn parses_basic_apk_archive() {
+        let dir = tempdir().expect("tempdir");
+        let apk_path = dir.path().join("sample.apk");
+        let file = File::create(&apk_path).expect("apk file");
+        let mut zip = ZipWriter::new(file);
+        let options = FileOptions::default();
+
+        let manifest = r#"<?xml version='1.0' encoding='utf-8'?>
+            <manifest package='com.example.app' xmlns:android='http://schemas.android.com/apk/res/android'>
+              <uses-permission android:name='android.permission.INTERNET'/>
+              <application android:debuggable='true' android:allowBackup='true' android:usesCleartextTraffic='true'>
+                <activity android:name='.MainActivity' android:exported='true'/>
+              </application>
+            </manifest>"#;
+
+        zip.start_file("AndroidManifest.xml", options).expect("manifest start");
+        zip.write_all(manifest.as_bytes()).expect("manifest write");
+        zip.start_file("res/values/strings.xml", options).expect("strings start");
+        zip.write_all(b"<resources><string name='api_url'>https://api.example.com/v1</string><string name='secret'>api_key=abcd1234</string></resources>")
+            .expect("strings write");
+        zip.finish().expect("zip finish");
+
+        let parsed = ParsedApk::from_file(&apk_path).expect("parsed apk");
+        assert_eq!(parsed.file_count, 2);
+        assert!(parsed.manifest_text.is_some());
+        assert!(parsed.extracted_urls.iter().any(|u| u.contains("api.example.com")));
+        assert!(parsed.secrets.iter().any(|s| s.contains("api_key")));
     }
 }

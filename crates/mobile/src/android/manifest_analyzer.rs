@@ -51,7 +51,7 @@ pub fn analyze_manifest(
                         let key = String::from_utf8_lossy(attr.key.as_ref());
                         let value = String::from_utf8_lossy(attr.value.as_ref()).to_string();
                         if key.ends_with("minSdkVersion") {
-                            summary.min_sdk = Some(value);
+                            summary.min_sdk = Some(value.clone());
                         }
                         if key.ends_with("targetSdkVersion") {
                             summary.target_sdk = Some(value);

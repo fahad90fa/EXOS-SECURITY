@@ -1,0 +1,15 @@
+[package]
+name = "nexus-redteam"
+description = "Adversarial testing and reporting utilities for Nexus Sentinel"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+chrono.workspace = true
+regex.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tracing.workspace = true

@@ -5,8 +5,7 @@ use uuid::Uuid;
 
 // ─── HTTP Method ─────────────────────────────────────────────────────────────
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, sqlx::Type)]
-#[sqlx(type_name = "text")]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum HttpMethod {
     GET,
     POST,

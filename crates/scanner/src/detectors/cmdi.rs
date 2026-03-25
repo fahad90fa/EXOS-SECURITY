@@ -44,7 +44,7 @@ impl Detector for CommandInjectionDetector {
                                 Severity::Critical,
                                 &ctx.url,
                                 &param.name,
-                                payload,
+                                *payload,
                                 format!("Command output indicator `{}` found in response", indicator),
                                 "cmdi/output",
                             )
@@ -69,7 +69,7 @@ impl Detector for CommandInjectionDetector {
                                 Severity::Critical,
                                 &ctx.url,
                                 &param.name,
-                                payload,
+                                *payload,
                                 format!("Response delayed {}ms suggesting blind command injection", resp.elapsed_ms),
                                 "cmdi/time",
                             )

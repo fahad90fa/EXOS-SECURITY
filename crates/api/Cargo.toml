@@ -19,6 +19,7 @@ nexus-core    = { path = "../core" }
 nexus-scanner = { path = "../scanner" }
 nexus-crawler = { path = "../crawler" }
 nexus-fuzzer  = { path = "../fuzzer" }
+nexus-mobile  = { path = "../mobile" }
 
 tokio.workspace       = true
 futures.workspace     = true
@@ -30,6 +31,7 @@ hyper.workspace       = true
 serde.workspace       = true
 serde_json.workspace  = true
 serde_yaml.workspace  = true
+tempfile = "3"
 
 sqlx.workspace        = true
 redis.workspace       = true

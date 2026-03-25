@@ -1,7 +1,7 @@
 use anyhow::Result;
 use once_cell::sync::OnceCell;
 use redis::aio::ConnectionManager;
-use sqlx::{postgres::PgPoolOptions, PgPool};
+use sqlx::{migrate::Migrator, postgres::PgPoolOptions, PgPool};
 
 static DB: OnceCell<Database> = OnceCell::new();
 static REDIS: OnceCell<RedisPool> = OnceCell::new();
@@ -22,7 +22,8 @@ impl Database {
 
     /// Run pending SQLx migrations.
     pub async fn run_migrations(&self) -> Result<()> {
-        sqlx::migrate!("../../migrations").run(&self.0).await?;
+        let migrator = Migrator::new(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../migrations")).await?;
+        migrator.run(&self.0).await?;
         Ok(())
     }
 

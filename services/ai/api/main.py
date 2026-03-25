@@ -1,25 +1,85 @@
 #!/usr/bin/env python3
 """
-ExploitGPT Core — AI-powered exploitation engine using GPT-4 and custom ML models.
+ExploitGPT Core — AI-powered exploitation engine using NVIDIA Integrate and custom ML models.
 """
 
 import os
 import json
 import asyncio
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any
 from datetime import datetime
-import openai
-import torch
-import torch.nn as nn
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
-import numpy as np
+import requests
+NVIDIA_INVOKE_URL = "https://integrate.api.nvidia.com/v1/chat/completions"
+
+try:
+    import torch
+    import torch.nn as nn
+except ImportError:  # pragma: no cover - optional dependency fallback
+    torch = None
+    nn = None
+
+try:
+    from transformers import AutoTokenizer, AutoModelForSequenceClassification
+except ImportError:  # pragma: no cover - optional dependency fallback
+    AutoTokenizer = None
+    AutoModelForSequenceClassification = None
 
 class ExploitGenerator:
-    """AI-powered exploit generation using GPT-4."""
+    """AI-powered exploit generation using an NVIDIA-hosted chat model."""
 
     def __init__(self):
-        self.client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-        self.model = "gpt-4"
+        self.api_key = os.getenv("NVIDIA_API_KEY")
+        self.model = os.getenv("NVIDIA_MODEL", "mistralai/mistral-small-4-119b-2603")
+        self.stream = os.getenv("NVIDIA_STREAM", "true").lower() not in {"0", "false", "no"}
+
+    def _post_chat_completion(self, prompt: str) -> str:
+        if not self.api_key:
+            raise RuntimeError(
+                "NVIDIA_API_KEY is not set. Export your NVIDIA API token before running the AI service."
+            )
+
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Accept": "text/event-stream" if self.stream else "application/json",
+        }
+        payload = {
+            "model": self.model,
+            "reasoning_effort": "high",
+            "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": 2000,
+            "temperature": 0.10,
+            "top_p": 1.00,
+            "stream": self.stream,
+        }
+
+        response = requests.post(NVIDIA_INVOKE_URL, headers=headers, json=payload, stream=self.stream, timeout=120)
+        response.raise_for_status()
+
+        if not self.stream:
+            data = response.json()
+            return data["choices"][0]["message"]["content"].strip()
+
+        chunks: List[str] = []
+        for raw_line in response.iter_lines(decode_unicode=True):
+            if not raw_line:
+                continue
+            line = raw_line.strip()
+            if line.startswith("data: "):
+                line = line[6:].strip()
+            if line == "[DONE]":
+                break
+            try:
+                event = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+
+            for choice in event.get("choices", []):
+                delta = choice.get("delta", {})
+                content = delta.get("content")
+                if content:
+                    chunks.append(content)
+
+        return "".join(chunks).strip()
 
     async def generate_exploit(self, vulnerability: Dict[str, Any]) -> Dict[str, Any]:
         """Generate a weaponized exploit for a given vulnerability."""
@@ -46,14 +106,7 @@ class ExploitGenerator:
         - Demonstrate the impact (data exfiltration, RCE, etc.)
         """
 
-        response = await self.client.chat.completions.create(
-            model=self.model,
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=2000,
-            temperature=0.1
-        )
-
-        code = response.choices[0].message.content.strip()
+        code = await asyncio.to_thread(self._post_chat_completion, prompt)
         return {
             "exploit_code": code,
             "language": "python",
@@ -113,32 +166,51 @@ class PayloadOptimizer:
 
         return payload
 
-class PPOAgent(nn.Module):
-    """Simplified PPO agent for payload optimization."""
+if nn is not None:
+    class PPOAgent(nn.Module):
+        """Simplified PPO agent for payload optimization."""
 
-    def __init__(self):
-        super().__init__()
-        self.policy_net = nn.Sequential(
-            nn.Linear(128, 64),
-            nn.ReLU(),
-            nn.Linear(64, 32),
-            nn.ReLU(),
-            nn.Linear(32, 1),
-            nn.Sigmoid()
-        )
+        def __init__(self):
+            super().__init__()
+            self.policy_net = nn.Sequential(
+                nn.Linear(128, 64),
+                nn.ReLU(),
+                nn.Linear(64, 32),
+                nn.ReLU(),
+                nn.Linear(32, 1),
+                nn.Sigmoid()
+            )
 
-    def forward(self, x):
-        return self.policy_net(x)
+        def forward(self, x):
+            return self.policy_net(x)
+else:
+    class PPOAgent:
+        """Fallback PPO placeholder when torch is unavailable."""
+
+        def __init__(self):
+            self.policy_net = None
+
+        def forward(self, x):
+            raise RuntimeError("torch is required for PPOAgent")
 
 class VulnerabilityClassifier:
     """BERT-based vulnerability classification model."""
 
     def __init__(self):
-        self.tokenizer = AutoTokenizer.from_pretrained("microsoft/DialoGPT-medium")
-        self.model = AutoModelForSequenceClassification.from_pretrained(
-            "microsoft/DialoGPT-medium",
-            num_labels=20  # Number of vulnerability classes
-        )
+        self._enabled = AutoTokenizer is not None and AutoModelForSequenceClassification is not None
+        self.tokenizer = None
+        self.model = None
+        if self._enabled:
+            try:
+                self.tokenizer = AutoTokenizer.from_pretrained("microsoft/DialoGPT-medium")
+                self.model = AutoModelForSequenceClassification.from_pretrained(
+                    "microsoft/DialoGPT-medium",
+                    num_labels=20  # Number of vulnerability classes
+                )
+            except Exception:
+                self._enabled = False
+                self.tokenizer = None
+                self.model = None
         self.classes = [
             "sql_injection", "xss_reflected", "xss_stored", "xss_dom",
             "ssrf", "xxe", "command_injection", "ssti", "path_traversal",
@@ -149,6 +221,9 @@ class VulnerabilityClassifier:
 
     def classify(self, request: str, response: str) -> Dict[str, Any]:
         """Classify a request/response pair for vulnerabilities."""
+        if not self._enabled or self.tokenizer is None or self.model is None or torch is None:
+            return self._heuristic_classify(request, response)
+
         text = f"Request: {request}\nResponse: {response[:500]}"
 
         inputs = self.tokenizer(text, return_tensors="pt", truncation=True, max_length=512)
@@ -165,6 +240,33 @@ class VulnerabilityClassifier:
                 class_name: pred.item()
                 for class_name, pred in zip(self.classes, predictions[0])
             }
+        }
+
+    def _heuristic_classify(self, request: str, response: str) -> Dict[str, Any]:
+        haystack = f"{request}\n{response}".lower()
+        rules = [
+            ("sql_injection", ["sql syntax", "mysql", "postgres", "sqlite", "union select", "ora-"]),
+            ("xss_reflected", ["<script", "onerror=", "alert(", "javascript:"]),
+            ("ssrf", ["169.254.169.254", "metadata", "internal", "localhost", "127.0.0.1"]),
+            ("command_injection", ["uid=", "gid=", "sh:", "bash:", "command not found"]),
+            ("ssti", ["{{7*7}}", "${{7*7}}", "<%= 7*7 %>"]),
+            ("path_traversal", ["../", "..\\", "/etc/passwd", "windows\\system32"]),
+            ("cors_misconfig", ["access-control-allow-origin", "access-control-allow-credentials"]),
+            ("security_headers", ["x-frame-options", "strict-transport-security"]),
+        ]
+
+        for vuln_class, indicators in rules:
+            if any(indicator in haystack for indicator in indicators):
+                return {
+                    "class": vuln_class,
+                    "confidence": 0.72,
+                    "all_predictions": {name: (0.72 if name == vuln_class else 0.01) for name in self.classes},
+                }
+
+        return {
+            "class": "other",
+            "confidence": 0.35,
+            "all_predictions": {name: (0.35 if name == "other" else 0.03) for name in self.classes},
         }
 
 class ExploitGPT:

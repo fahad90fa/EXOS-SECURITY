@@ -61,7 +61,7 @@ impl Detector for PathTraversalDetector {
                                 Severity::High,
                                 &ctx.url,
                                 &param.name,
-                                payload,
+                                *payload,
                                 "Server returned file system content (e.g. /etc/passwd)",
                                 "path_traversal",
                             )
