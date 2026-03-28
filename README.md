@@ -1,3 +1,7 @@
+# This Repo Was Modified By GitHub Commit Bot
+### GITHUB LINK
+[Click Here](https://github.com/thespeedx/commit-bot)
+
 # 🔍 Nexus Sentinel - Advanced Web Application Security Scanner
 
 ![Nexus Sentinel Logo](https://img.shields.io/badge/Nexus-Sentinel-blue?style=for-the-badge&logo=security&logoColor=white)
@@ -612,3 +616,8 @@ For commercial use or to remove AGPL restrictions, contact our sales team at [sa
 **Ready to revolutionize web application security? 🚀**
 
 [Get Started](https://docs.nexussentinel.io/getting-started) | [API Docs](https://api.nexussentinel.io) | [Contribute](CONTRIBUTING.md)
+
+# This Repo Was Modified By GitHub Commit Bot
+### GITHUB LINK
+[Click Here](https://github.com/thespeedx/commit-bot)
+
