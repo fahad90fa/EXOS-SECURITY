@@ -151,3 +151,4 @@
 - [2026-04-01 22:12:48] documentation update
 - [2026-04-01 22:12:48] dependency updates
 - [2026-04-01 22:12:49] error fixed
+- [2026-04-02 21:35:20] minor fixes
