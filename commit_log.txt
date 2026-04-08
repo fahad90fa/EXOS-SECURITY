@@ -198,3 +198,4 @@
 - [2026-04-08 13:21:49] minor fixes
 - [2026-04-08 13:21:50] refactored code
 - [2026-04-08 13:21:50] cleaned up code
+- [2026-04-08 13:21:51] improved security
